@@ -36,10 +36,11 @@ nav_bar = dbc.Navbar(
 
 
 kaart = dl.Map(
-                    zoom=11,
-                    center=[52.479893, 4.748747],
+                    zoom=10,
+                    center=[52.356789, 4.773006],
                     children=[
-                    dl.TileLayer()
+                    dl.TileLayer(),
+                    dl.GeoJSON(url="/assets/buurten_od.geojson" ,id="buurten")
                 ],
                 style={
                 "width": "90%",
@@ -50,169 +51,6 @@ kaart = dl.Map(
             },)
 
 
-left_panel_tabs = dbc.Tabs(
-    [
-        dbc.Tab(
-            [
-                dbc.Label(
-                    "Aggregatieniveau",
-                    style={"fontStyle": "italic"},
-                ),
-                dcc.Dropdown(
-                    options=[
-                        {"label": "Subconditie", "value": 1},
-                        {"label": "Hoofdconditie", "value": 2},
-                        {"label": "Keten", "value": 3},
-                    ],
-                    id="aggregatie-niveau",
-                    value=1,
-                    clearable=False,
-                    searchable=False,
-                ),
-                html.Br(),
-                dbc.Container(
-                    [
-                        dcc.Checklist(
-                            ["Maatregel pakket"],
-                            inputStyle={"margin": "1rem"},
-                            id="maatregel-check",
-                        ),
-                    ],
-                    style={
-                        "backgroundColor": "#eeeeee",
-                        "padding": "1rem",
-                    },
-                ),
-                html.Br(),
-                dbc.Label("Grafiek configuratie", style={"fontWeight": "bold"}),
-                html.Hr(),
-                dbc.Label("Kleur op basis van: "),
-                dcc.Dropdown(
-                    options=[
-                        {"label": "Subconditie", "value": "subconditie"},
-                        {"label": "Hoofdconditie", "value": "hoofdconditie"},
-                        {"label": "Keten", "value": "keten"},
-                        {"label": "Categorie", "value": "categorie"},
-                    ],
-                    value="keten",
-                    id="grafiek-kleur-groep",
-                ),
-            ],
-            label="Configuratie",
-        ),
-        dbc.Tab(
-            [
-                dbc.Container(
-                    [
-                        dbc.Label(
-                            "Versnellers en vertragers",
-                            style={"fontWeight": "bold"},
-                        ),
-                        html.Br(),
-                        dbc.Label("Subconditie", style={"fontStyle": "italic"}),
-                        
-                        html.Br(),
-                        dbc.Label(
-                            "calamiteit",
-                            style={"fontStyle": "italic"},
-                        ),
-                        dcc.Slider(
-                            -10,
-                            10,
-                            1,
-                            value=0,
-                            included=False,
-                            id="calamiteit-slider",
-                            marks={
-                                10: {"label": "Vertragen"},
-                                -10: {"label": "Versnellen"},
-                            },
-                            tooltip={
-                                "placement": "bottom",
-                                "always_visible": False,
-                            },
-                            disabled=True,
-                        ),
-                        dbc.Label(
-                            "belangen",
-                            style={"fontStyle": "italic"},
-                        ),
-                        dcc.Slider(
-                            -10,
-                            10,
-                            1,
-                            value=0,
-                            included=False,
-                            id="belangen-slider",
-                            marks={
-                                10: {"label": "Vertragen"},
-                                -10: {"label": "Versnellen"},
-                            },
-                            disabled=True,
-                            tooltip={
-                                "placement": "bottom",
-                                "always_visible": False,
-                            },
-                        ),
-                        dbc.Label("trends", style={"fontStyle": "italic"}),
-                        dcc.Slider(
-                            -10,
-                            10,
-                            1,
-                            value=0,
-                            included=False,
-                            id="trends-slider",
-                            marks={
-                                10: {"label": "Vertragen"},
-                                -10: {"label": "Versnellen"},
-                            },
-                            tooltip={
-                                "placement": "bottom",
-                                "always_visible": False,
-                            },
-                            disabled=True,
-                        ),
-                        dbc.Label(
-                            "middelen",
-                            style={"fontStyle": "italic"},
-                        ),
-                        dcc.Slider(
-                            -10,
-                            10,
-                            1,
-                            value=0,
-                            included=False,
-                            id="middelen-slider",
-                            marks={
-                                10: {"label": "Vertragen"},
-                                -10: {"label": "Versnellen"},
-                            },
-                            tooltip={
-                                "placement": "bottom",
-                                "always_visible": False,
-                            },
-                            disabled=True,
-                        ),
-                    ],
-                    style={
-                        "backgroundColor": "#eeeeee",
-                        "padding": "1rem",
-                    },
-                ),
-                dbc.Button(
-                    "Reset",
-                    id="reset-button",
-                    style={
-                        "margin": "1rem",
-                        "backgroundColor": "#080C80",
-                        "borderColor": "#080C80",
-                    },
-                ),
-            ],
-            label="Maatregelen",
-        ),
-    ]
-)
 
 
 content = html.Div(
@@ -224,9 +62,9 @@ content = html.Div(
                     [
                         dbc.Container(
                             [
-                                html.H5("Conditionele ketens in Transformatiepaden"),
+                                html.H5("Emissie informatie buurten"),
                                 html.Hr(),
-                                left_panel_tabs,
+                                html.Div(id="buurt-info-div"),
                             ],
                             style=div_shadow(height="85vh"),
                         )
