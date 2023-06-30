@@ -1,5 +1,5 @@
 def main():
-    import readData
+    from readData import readData
     qrypath = "SQL/Emissies.sql"
     return readData(qrypath, geodata=False)
 
