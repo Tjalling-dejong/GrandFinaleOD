@@ -1,3 +1,4 @@
 /data
 .geojson
 .json
+__pycache__
