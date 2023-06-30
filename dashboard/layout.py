@@ -1,8 +1,10 @@
 from dash import dcc, html, Dash, Output, Input, State, callback
 import dash
 import dash_leaflet as dl
+import dash_leaflet.express as dlx
 import dash_bootstrap_components as dbc
 import pandas as pd
+from dash_extensions.javascript import arrow_function, assign
 
 from styling import div_shadow
 
@@ -35,12 +37,50 @@ nav_bar = dbc.Navbar(
 )
 
 
+
+classes = [
+ 44892,
+ 65221,
+ 85550,
+ 105879,
+ 126207,
+ 146536,
+ 166865,
+ 187195]
+
+colorscale = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C']
+style = dict(weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
+# Create colorbar.
+ctg = ["{}+".format(cls, classes[i + 1]) for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
+colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=400, height=30, position="bottomleft")
+# Geojson rendering logic, must be JavaScript as it is executed in clientside.
+style_handle = assign("""function(feature, context){
+    const {classes, colorscale, style, colorProp} = context.props.hideout;  // get props from hideout
+    const value = feature.properties[colorProp];  // get value the determines the color
+    for (let i = 0; i < classes.length; ++i) {
+        if (value > classes[i]) {
+            style.fillColor = colorscale[i];  // set the fill color according to the class
+        }
+    }
+    return style;
+}""")
+
+
 kaart = dl.Map(
                     zoom=10,
                     center=[52.356789, 4.773006],
                     children=[
                     dl.TileLayer(),
-                    dl.GeoJSON(url="/assets/buurten_od.geojson" ,id="buurten")
+                    colorbar,
+                    dl.GeoJSON(url="/assets/buurten_od_emissies.geojson",
+                    id="buurten",
+                    options=dict(style=style_handle),  # how to style each polygon
+                    zoomToBounds=True,  # when true, zooms to bounds when data changes (e.g. on load)
+                    zoomToBoundsOnClick=True,  # when true, zooms to bounds of feature (e.g. polygon) on click
+                    hoverStyle=arrow_function(dict(weight=5, color='#666', dashArray='')),  # style applied on hover
+                    hideout=dict(colorscale=colorscale, classes=classes, style=style, colorProp="fijnstof_afstand"),
+                    format="geojson"
+                    )
                 ],
                 style={
                 "width": "90%",

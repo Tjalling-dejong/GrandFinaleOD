@@ -8,6 +8,9 @@ from layout import content
 app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
+    assets_folder="../assets",
+    title="OD Emissies Dashboard"
+
 )
 
 app.config.suppress_callback_exceptions = True
