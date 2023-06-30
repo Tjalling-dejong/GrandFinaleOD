@@ -1,11 +1,8 @@
-SELECT 
-    p.nic, 
-    p.bedrijf,
-    p.[Fijn stof (PM10)], 
-    p.[Stikstofoxiden (NOx / NO2)],
+SELECT DISTINCT
     y.bu_code,
     y.bu_naam,
-    y.distance
+	SUM( p.[Fijn stof (PM10)]/ y.distance) as fijnstof_afstand, 
+	SUM(  p.[Stikstofoxiden (NOx / NO2)]/ y.distance) as stikstof_afstand
 FROM 
 (
     SELECT 
@@ -49,4 +46,6 @@ JOIN
 	    geom.STCentroid().STDistance(Geometry::Point([x_Coordinaat], [y_Coordinaat], 28992)) AS distance
     FROM [dbo].[CBS_Buurten_2020_Geo], [dbo].[eMJV_AlgemeneGegevens]
     WHERE gm_naam IN ('Amsterdam', 'Haarlemmermeer', 'Zaanstad', 'Aalsmeer', 'Amstelveen', 'Diemen', 'Ouder-Amstel', 'Uithoorn')
-) y ON p.nic = y.nic;
+        AND geom.STCentroid().STDistance(Geometry::Point([x_Coordinaat], [y_Coordinaat], 28992)) <= 30000
+) y ON p.nic = y.nic
+group by y.bu_code, y.bu_naam
