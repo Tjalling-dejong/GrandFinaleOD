@@ -15,7 +15,7 @@ nav_bar = dbc.Navbar(
             [
                 dbc.Col(
                     dbc.NavbarBrand(
-                        "OD emissie dashboard",
+                        "OD Noorzeekanaal emissie dashboard",
                         style={"paddingLeft": "1rem", "fontWeight": "bold"},
                     ),
                     width=4,
@@ -25,7 +25,7 @@ nav_bar = dbc.Navbar(
             style={"width": "100%"},
         ),
     ],
-    color="#080C80",
+    color="#477C0E",
     # links_left=True,
     dark=True,
     style={
@@ -72,7 +72,7 @@ kaart = dl.Map(
                     children=[
                     dl.TileLayer(),
                     colorbar,
-                    dl.GeoJSON(url="/assets/buurten_od_emissies.geojson",
+                    dl.GeoJSON(url="/assets/buurten_emissies_gezondheid.geojson",
                     id="buurten",
                     options=dict(style=style_handle),  # how to style each polygon
                     zoomToBounds=True,  # when true, zooms to bounds when data changes (e.g. on load)
@@ -80,7 +80,8 @@ kaart = dl.Map(
                     hoverStyle=arrow_function(dict(weight=5, color='#666', dashArray='')),  # style applied on hover
                     hideout=dict(colorscale=colorscale, classes=classes, style=style, colorProp="fijnstof_afstand"),
                     format="geojson"
-                    )
+                    ),
+                    dl.GeoJSON(url="/assets/bedrijven.geojson", id="bedrijven")
                 ],
                 style={
                 "width": "90%",
@@ -104,7 +105,8 @@ content = html.Div(
                             [
                                 html.H5("Emissie informatie buurten"),
                                 html.Hr(),
-                                html.Div(id="buurt-info-div"),
+                                html.Div("Klik op een buurt op de kaart",id="buurt-info-div", style={"textAlign": "left"}),
+                                html.Div(id="bedrijf-info-div", style={"textAlign": "left"})
                             ],
                             style=div_shadow(height="85vh"),
                         )

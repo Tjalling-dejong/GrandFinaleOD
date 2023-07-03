@@ -3,6 +3,7 @@ import dash
 import dash_bootstrap_components as dbc
 
 from layout import content
+from callbacks import *
     
 
 app = Dash(
