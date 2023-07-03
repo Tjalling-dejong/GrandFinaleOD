@@ -1,8 +1,10 @@
 from dash import dcc, html, Dash, Output, Input, State, callback
 import dash
 import dash_leaflet as dl
+import dash_leaflet.express as dlx
 import dash_bootstrap_components as dbc
 import pandas as pd
+from dash_extensions.javascript import arrow_function, assign
 
 from styling import div_shadow
 
@@ -13,7 +15,7 @@ nav_bar = dbc.Navbar(
             [
                 dbc.Col(
                     dbc.NavbarBrand(
-                        "OD emissie dashboard",
+                        "OD Noorzeekanaal emissie dashboard",
                         style={"paddingLeft": "1rem", "fontWeight": "bold"},
                     ),
                     width=4,
@@ -23,7 +25,7 @@ nav_bar = dbc.Navbar(
             style={"width": "100%"},
         ),
     ],
-    color="#080C80",
+    color="#477C0E",
     # links_left=True,
     dark=True,
     style={
@@ -35,11 +37,51 @@ nav_bar = dbc.Navbar(
 )
 
 
+
+classes = [
+ 44892,
+ 65221,
+ 85550,
+ 105879,
+ 126207,
+ 146536,
+ 166865,
+ 187195]
+
+colorscale = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C']
+style = dict(weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
+# Create colorbar.
+ctg = ["{}+".format(cls, classes[i + 1]) for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
+colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=400, height=30, position="bottomleft")
+# Geojson rendering logic, must be JavaScript as it is executed in clientside.
+style_handle = assign("""function(feature, context){
+    const {classes, colorscale, style, colorProp} = context.props.hideout;  // get props from hideout
+    const value = feature.properties[colorProp];  // get value the determines the color
+    for (let i = 0; i < classes.length; ++i) {
+        if (value > classes[i]) {
+            style.fillColor = colorscale[i];  // set the fill color according to the class
+        }
+    }
+    return style;
+}""")
+
+
 kaart = dl.Map(
-                    zoom=11,
-                    center=[52.479893, 4.748747],
+                    zoom=10,
+                    center=[52.356789, 4.773006],
                     children=[
-                    dl.TileLayer()
+                    dl.TileLayer(),
+                    colorbar,
+                    dl.GeoJSON(url="/assets/buurten_emissies_gezondheid.geojson",
+                    id="buurten",
+                    options=dict(style=style_handle),  # how to style each polygon
+                    zoomToBounds=True,  # when true, zooms to bounds when data changes (e.g. on load)
+                    zoomToBoundsOnClick=True,  # when true, zooms to bounds of feature (e.g. polygon) on click
+                    hoverStyle=arrow_function(dict(weight=5, color='#666', dashArray='')),  # style applied on hover
+                    hideout=dict(colorscale=colorscale, classes=classes, style=style, colorProp="fijnstof_afstand"),
+                    format="geojson"
+                    ),
+                    dl.GeoJSON(url="/assets/bedrijven.geojson", id="bedrijven")
                 ],
                 style={
                 "width": "90%",
@@ -50,169 +92,6 @@ kaart = dl.Map(
             },)
 
 
-left_panel_tabs = dbc.Tabs(
-    [
-        dbc.Tab(
-            [
-                dbc.Label(
-                    "Aggregatieniveau",
-                    style={"fontStyle": "italic"},
-                ),
-                dcc.Dropdown(
-                    options=[
-                        {"label": "Subconditie", "value": 1},
-                        {"label": "Hoofdconditie", "value": 2},
-                        {"label": "Keten", "value": 3},
-                    ],
-                    id="aggregatie-niveau",
-                    value=1,
-                    clearable=False,
-                    searchable=False,
-                ),
-                html.Br(),
-                dbc.Container(
-                    [
-                        dcc.Checklist(
-                            ["Maatregel pakket"],
-                            inputStyle={"margin": "1rem"},
-                            id="maatregel-check",
-                        ),
-                    ],
-                    style={
-                        "backgroundColor": "#eeeeee",
-                        "padding": "1rem",
-                    },
-                ),
-                html.Br(),
-                dbc.Label("Grafiek configuratie", style={"fontWeight": "bold"}),
-                html.Hr(),
-                dbc.Label("Kleur op basis van: "),
-                dcc.Dropdown(
-                    options=[
-                        {"label": "Subconditie", "value": "subconditie"},
-                        {"label": "Hoofdconditie", "value": "hoofdconditie"},
-                        {"label": "Keten", "value": "keten"},
-                        {"label": "Categorie", "value": "categorie"},
-                    ],
-                    value="keten",
-                    id="grafiek-kleur-groep",
-                ),
-            ],
-            label="Configuratie",
-        ),
-        dbc.Tab(
-            [
-                dbc.Container(
-                    [
-                        dbc.Label(
-                            "Versnellers en vertragers",
-                            style={"fontWeight": "bold"},
-                        ),
-                        html.Br(),
-                        dbc.Label("Subconditie", style={"fontStyle": "italic"}),
-                        
-                        html.Br(),
-                        dbc.Label(
-                            "calamiteit",
-                            style={"fontStyle": "italic"},
-                        ),
-                        dcc.Slider(
-                            -10,
-                            10,
-                            1,
-                            value=0,
-                            included=False,
-                            id="calamiteit-slider",
-                            marks={
-                                10: {"label": "Vertragen"},
-                                -10: {"label": "Versnellen"},
-                            },
-                            tooltip={
-                                "placement": "bottom",
-                                "always_visible": False,
-                            },
-                            disabled=True,
-                        ),
-                        dbc.Label(
-                            "belangen",
-                            style={"fontStyle": "italic"},
-                        ),
-                        dcc.Slider(
-                            -10,
-                            10,
-                            1,
-                            value=0,
-                            included=False,
-                            id="belangen-slider",
-                            marks={
-                                10: {"label": "Vertragen"},
-                                -10: {"label": "Versnellen"},
-                            },
-                            disabled=True,
-                            tooltip={
-                                "placement": "bottom",
-                                "always_visible": False,
-                            },
-                        ),
-                        dbc.Label("trends", style={"fontStyle": "italic"}),
-                        dcc.Slider(
-                            -10,
-                            10,
-                            1,
-                            value=0,
-                            included=False,
-                            id="trends-slider",
-                            marks={
-                                10: {"label": "Vertragen"},
-                                -10: {"label": "Versnellen"},
-                            },
-                            tooltip={
-                                "placement": "bottom",
-                                "always_visible": False,
-                            },
-                            disabled=True,
-                        ),
-                        dbc.Label(
-                            "middelen",
-                            style={"fontStyle": "italic"},
-                        ),
-                        dcc.Slider(
-                            -10,
-                            10,
-                            1,
-                            value=0,
-                            included=False,
-                            id="middelen-slider",
-                            marks={
-                                10: {"label": "Vertragen"},
-                                -10: {"label": "Versnellen"},
-                            },
-                            tooltip={
-                                "placement": "bottom",
-                                "always_visible": False,
-                            },
-                            disabled=True,
-                        ),
-                    ],
-                    style={
-                        "backgroundColor": "#eeeeee",
-                        "padding": "1rem",
-                    },
-                ),
-                dbc.Button(
-                    "Reset",
-                    id="reset-button",
-                    style={
-                        "margin": "1rem",
-                        "backgroundColor": "#080C80",
-                        "borderColor": "#080C80",
-                    },
-                ),
-            ],
-            label="Maatregelen",
-        ),
-    ]
-)
 
 
 content = html.Div(
@@ -224,9 +103,10 @@ content = html.Div(
                     [
                         dbc.Container(
                             [
-                                html.H5("Conditionele ketens in Transformatiepaden"),
+                                html.H5("Emissie informatie buurten"),
                                 html.Hr(),
-                                left_panel_tabs,
+                                html.Div("Klik op een buurt op de kaart",id="buurt-info-div", style={"textAlign": "left"}),
+                                html.Div(id="bedrijf-info-div", style={"textAlign": "left"})
                             ],
                             style=div_shadow(height="85vh"),
                         )
