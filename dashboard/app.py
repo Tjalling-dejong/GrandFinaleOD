@@ -3,11 +3,15 @@ import dash
 import dash_bootstrap_components as dbc
 
 from layout import content
+from callbacks import *
     
 
 app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
+    assets_folder="../assets",
+    title="OD Emissies Dashboard"
+
 )
 
 app.config.suppress_callback_exceptions = True
